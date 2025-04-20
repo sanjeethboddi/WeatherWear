@@ -10,8 +10,8 @@ interface UnitContextType {
 const UnitContext = createContext<UnitContextType | undefined>(undefined);
 
 export const UnitProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isCelsius, setIsCelsius] = useState(true);
-  const [isKilometers, setIsKilometers] = useState(true);
+  const [isCelsius, setIsCelsius] = useState(false);
+  const [isKilometers, setIsKilometers] = useState(false);
 
   const toggleTemperature = () => setIsCelsius(!isCelsius);
   const toggleDistance = () => setIsKilometers(!isKilometers);

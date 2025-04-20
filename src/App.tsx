@@ -9,33 +9,128 @@ import { fetchWeatherData } from './services/weatherService';
 import { WeatherData } from './types/weather';
 import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Sun } from 'lucide-react';
 import Loading from './components/Loading';
+import { setCoordinatesForLocation } from './services/weatherService';
+import { Location } from './types/weather';
 
 function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [location, setLocation] = useState<string>('New York');
+  const [location, setLocation] = useState<Location>({
+                id: 0, 
+                name: 'Malvern', 
+                latitude: 0, 
+                longitude: 0,
+                country: 'US',
+                admin1: 'Pennsylvania'
+              });
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [geolocationError, setGeolocationError] = useState<string | null>(null);
 
+  // Get user's current location name, latitude, and longitude
+  useEffect(() => {
+    const getCurrentLocation = async () => {
+      try {
+        if (!navigator.geolocation) {
+          console.log('Geolocation is not supported by your browser');
+          setGeolocationError('Geolocation is not supported by your browser. Using default location: New York');
+          return;
+        }
+
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            (error) => {
+              console.log('Geolocation error:', error);
+              let errorMessage = 'Unable to get your location. ';
+              
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage += 'Please enable location access in your browser settings.';
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage += 'Location information is unavailable. Please check your device settings.';
+                  break;
+                case error.TIMEOUT:
+                  errorMessage += 'Location request timed out. Please try again.';
+                  break;
+                default:
+                  errorMessage += 'An unknown error occurred.';
+                  break;
+              }
+              reject(error);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        });
+
+        // Todo: fetch location name using reverse geocoding
+        console.log('current location', position.coords.latitude, position.coords.longitude);
+        setLocation({
+          id: 0, 
+          name: 'Current Location',
+          latitude: position.coords.latitude, 
+          longitude: position.coords.longitude,
+          country: '',
+          admin1: ''
+        });
+        setGeolocationError(null); // Clear any previous geolocation errors
+        
+      } catch (error) {
+        console.log('Error getting location:', error);
+        setGeolocationError('Failed to get your location. Using default location');
+      }
+    };
+
+    getCurrentLocation();
+  }, []);
+
+  // First useEffect to handle coordinate fetching
+  useEffect(() => {
+    const fetchCoordinates = async () => {
+      if (!location.latitude || !location.longitude) {
+        try {
+          await setCoordinatesForLocation(location, setLocation);
+        } catch (err) {
+          console.error('Error fetching coordinates:', err);
+          setError('Could not fetch location coordinates.');
+        }
+      }
+    };
+
+    fetchCoordinates();
+  }, [location.name]); // Only run when location name changes
+
+  // Second useEffect to fetch weather data after coordinates are set
   useEffect(() => {
     const getWeather = async () => {
+      if (!location.latitude || !location.longitude) return; // Don't fetch if no coordinates
+
       try {
         setLoading(true);
+        setError(null);
         const data = await fetchWeatherData(location);
         setWeather(data);
-        setError(null);
       } catch (err) {
+        console.error('Weather fetch error:', err);
         setError('Could not fetch weather data. Please try again.');
-        console.error(err);
+        setWeather(null);
       } finally {
         setLoading(false);
       }
     };
 
     getWeather();
-  }, [location]);
+  }, [location.latitude, location.longitude]); // Only run when coordinates change
 
-  const handleLocationChange = (newLocation: string) => {
-    setLocation(newLocation);
+  const handleLocationChange = (newLocation: Location) => {
+    if (newLocation.name.trim()) {
+      setLocation(newLocation);
+    }
   };
 
   const getBackgroundColor = () => {
@@ -99,6 +194,12 @@ function App() {
           onLocationChange={handleLocationChange} 
           weatherIcon={getWeatherIcon()} 
         />
+        
+        {geolocationError && (
+          <div className="bg-yellow-500/20 text-yellow-200 p-4 rounded-lg mb-4">
+            <p className="text-sm">{geolocationError}</p>
+          </div>
+        )}
         
         {loading ? (
           <Loading />

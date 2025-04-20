@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { WeatherData } from '../types/weather';
 import { getRecommendations } from '../services/recommendationService';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useUnits } from '../contexts/UnitContext';
 
 interface ForecastProps {
   weather: WeatherData;
@@ -11,6 +12,7 @@ interface ForecastProps {
 
 const Forecast: React.FC<ForecastProps> = ({ weather }) => {
   const [expandedDay, setExpandedDay] = React.useState<number | null>(null);
+  const { isCelsius } = useUnits();
   
   const toggleDay = (index: number) => {
     if (expandedDay === index) {
@@ -18,6 +20,10 @@ const Forecast: React.FC<ForecastProps> = ({ weather }) => {
     } else {
       setExpandedDay(index);
     }
+  };
+  
+  const getTemperature = (tempC: number) => {
+    return isCelsius ? Math.round(tempC) : Math.round((tempC * 9/5) + 32);
   };
   
   return (
@@ -80,8 +86,8 @@ const Forecast: React.FC<ForecastProps> = ({ weather }) => {
                     </div>
                     
                     <div className="flex space-x-2 md:space-x-4 mr-2">
-                      <span className="text-blue-300 font-medium">{Math.round(day.day.mintemp_c)}°</span>
-                      <span className="text-white font-medium">{Math.round(day.day.maxtemp_c)}°</span>
+                      <span className="text-blue-300 font-medium">{getTemperature(day.day.mintemp_c)}°</span>
+                      <span className="text-white font-medium">{getTemperature(day.day.maxtemp_c)}°</span>
                     </div>
                     
                     {isExpanded ? <ChevronUp size={18} className="text-white/60" /> : <ChevronDown size={18} className="text-white/60" />}

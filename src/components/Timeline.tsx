@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { WeatherData } from '../types/weather';
+import { useUnits } from '../contexts/UnitContext';
 
 interface TimelineProps {
   weather: WeatherData;
@@ -10,14 +11,19 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({ weather }) => {
   const currentHour = new Date().getHours();
   const today = weather.forecast.forecastday[0];
+  const { isCelsius } = useUnits();
+
   
   // Get hours from now until the end of the day
   const hourlyForecast = today.hour.filter(hour => {
     if (!hour?.time) return false;
     try {
-      const hourTime = parseInt(hour.time.split(' ')[1].split(':')[0]);
+      // Parse the ISO date string and get the hour
+      const date = new Date(hour.time);
+      const hourTime = date.getHours();
       return hourTime >= currentHour;
     } catch (error) {
+      console.error('Error parsing hour time:', hour?.time, error);
       return false;
     }
   });
@@ -31,6 +37,10 @@ const Timeline: React.FC<TimelineProps> = ({ weather }) => {
   }
   
   const combinedHours = [...hourlyForecast, ...extraHours].slice(0, 8);
+
+  const getTemperature = (tempC: number) => {
+    return isCelsius ? Math.round(tempC) : Math.round((tempC * 9/5) + 32);
+  };
   
   return (
     <motion.div 
@@ -60,7 +70,7 @@ const Timeline: React.FC<TimelineProps> = ({ weather }) => {
                 className="w-8 h-8 my-1"
                 title={hour?.condition?.text}
               />
-              <p className="text-white font-medium mt-1">{Math.round(hour?.temp_c || 0)}°</p>
+              <p className="text-white font-medium mt-1">{getTemperature(hour?.temp_c || 0)}°</p>
               <p className="text-white/60 text-xs mt-1">{hour?.chance_of_rain || 0}%</p>
             </motion.div>
           ))}

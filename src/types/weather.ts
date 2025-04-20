@@ -135,3 +135,13 @@ export interface RecommendationData {
   items: string[];
   skincare: string[];
 }
+
+
+export interface Location {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  admin1?: string;
+}
