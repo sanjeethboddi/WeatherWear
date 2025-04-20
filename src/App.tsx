@@ -5,12 +5,12 @@ import CurrentWeather from './components/CurrentWeather';
 import Recommendations from './components/Recommendations';
 import Timeline from './components/Timeline';
 import Forecast from './components/Forecast';
+import Astronomy from './components/Astronomy';
 import { fetchWeatherData } from './services/weatherService';
-import { WeatherData } from './types/weather';
+import { WeatherData, Location } from './types/weather';
 import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Sun } from 'lucide-react';
 import Loading from './components/Loading';
 import { setCoordinatesForLocation } from './services/weatherService';
-import { Location } from './types/weather';
 
 function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -217,6 +217,7 @@ function App() {
             <CurrentWeather weather={weather} />
             <Recommendations weather={weather} />
             <Timeline weather={weather} />
+            <Astronomy weather={weather} />
             <Forecast weather={weather} />
           </motion.div>
         ) : null}

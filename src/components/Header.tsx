@@ -106,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({ location, onLocationChange, weatherIcon
           <div className="mr-3">
             {weatherIcon}
           </div>
-          <h1 className="text-2xl font-semibold text-white">Attire Weather</h1>
+          <h1 className="text-2xl font-semibold text-white">Weather Wear</h1>
         </motion.div>
         
         <div className="flex items-center space-x-4">
